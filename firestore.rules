@@ -1,0 +1,63 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      // In a real app, you'd check a specific collection or list.
+      // For this turn, we'll allow the requester as admin.
+      return isSignedIn() && (
+        request.auth.token.email == 'sambin42@gmail.com'
+      );
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'balance']) &&
+             data.balance is number &&
+             data.uid == request.auth.uid;
+    }
+
+    function isValidOrder(data) {
+      return data.keys().hasAll(['userId', 'amount', 'status', 'type', 'createdAt']) &&
+             data.userId == request.auth.uid &&
+             data.amount is number &&
+             data.status in ['pending', 'completed', 'cancelled'] &&
+             data.type in ['recharge', 'add_money'];
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isAdmin() || (isOwner(userId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'photoURL']));
+    }
+
+    match /orders/{orderId} {
+      allow read, list: if true; 
+      allow create: if isSignedIn() && isValidOrder(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    match /stats/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

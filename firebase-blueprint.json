@@ -1,0 +1,67 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and balance information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "balance": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "balance"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Payment or service order",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "amount": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "completed", "cancelled"] },
+        "type": { "type": "string", "enum": ["recharge", "add_money"] },
+        "packageName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "metadata": { "type": "object" }
+      },
+      "required": ["userId", "amount", "status", "type", "createdAt"]
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "Global application configuration",
+      "type": "object",
+      "properties": {
+        "productName": { "type": "string" },
+        "productLogo": { "type": "string" },
+        "notice": { "type": "string" },
+        "banners": { "type": "array", "items": { "type": "string" } },
+        "showRecentOrders": { "type": "boolean" },
+        "supportLink": { "type": "string" },
+        "offersLink": { "type": "string" },
+        "rupantorApiKey": { "type": "string" },
+        "rupantorApiUrl": { "type": "string" },
+        "rupantorVerifyUrl": { "type": "string" },
+        "siteDomain": { "type": "string" },
+        "packages": { "type": "array" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Order history"
+    },
+    "/settings/global": {
+      "schema": "Settings",
+      "description": "Global settings"
+    }
+  }
+}
